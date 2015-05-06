@@ -371,14 +371,14 @@ config  ARCH_MSM_SCORPIONMP
 	select ARCH_MSM_SCORPION
 	select MSM_SMP
 	select HAVE_ARCH_HAS_CURRENT_TIMER
-	select MSM_JTAG if MSM_QDSS
+	select MSM_JTAG if CORESIGHT_ETM
 	bool
 
 config  ARCH_MSM_KRAITMP
 	select ARCH_MSM_KRAIT
 	select MSM_SMP
 	select HAVE_ARCH_HAS_CURRENT_TIMER
-	select MSM_JTAG if MSM_QDSS
+	select MSM_JTAG if CORESIGHT_ETM
 	bool
 	select HAVE_HW_BRKPT_RESERVED_RW_ACCESS
 
@@ -1601,19 +1601,23 @@ config MSM_DALRPC_TEST
 	help
 	  Exercises DAL RPC calls to QDSP6.
 
+config CPU_VOLTAGE_TABLE
+	bool "Enable CPU Voltage Table via sysfs for adjustements"
+	default n
+ 
+config OC_ULTIMATE
+	bool "allow 2.052 GHz max OC option"
+	default n
+	help
+	  Unlock the ultimate Overclock freq speed @ 2.052 GHz
+
 config FORCE_FAST_CHARGE
 	bool "Force AC charge mode at will"
 	default n
 	help
-	  A simple sysfs interface to force adapters that
-	  are detected as USB to charge as AC.
+		A simple sysfs interface to force adapters that
+		are detected as USB to charge as AC.
 
-config CPU_VOLTAGE_TABLE
-	bool "Enable CPU Voltage Table via sysfs for adjustements"
-	depends on ARCH_MSM8X60
-	default n
-	help
-	  User CPU Votlage Control
 
 if CPU_FREQ_MSM
 
@@ -2326,6 +2330,16 @@ config MSM_QDSP6_APR
 	  used by audio driver to configure QDSP6's
 	  ASM, ADM and AFE.
 
+config MSM_QDSP6_APRV2
+	bool "Audio QDSP6 APRv2 support"
+	depends on MSM_SMD
+	default n
+	help
+	  Enable APRv2 IPC protocol support between
+	  application processor and QDSP6. APR is
+	  used by audio driver to configure QDSP6's
+	  ASM, ADM and AFE.
+
 config MSM_QDSP6_CODECS
 	bool "Audio Codecs on QDSP6 APR "
 	depends on MSM_SMD
@@ -2362,6 +2376,16 @@ config MSM_AUDIO_QDSP6V2
           audio processing. It will enable support for
           AAC, AMRNB, AMRWB, EVRC, MP3, QCELP among
           others.
+
+config MSM_ADSP_LOADER
+        tristate "ADSP loader support"
+        select SND_SOC_MSM_APRV2_INTF
+	depends on MSM_AUDIO_QDSP6V2 || MSM_AUDIO_QDSP6
+        help
+          Enable ADSP image loader.
+	  The ADSP loader brings ADSP out of reset
+	  for the platforms that use APRv2.
+	  Say M if you want to enable this module.
 
 config MSM_ULTRASOUND
 	bool "MSM ultrasound support"
@@ -2416,6 +2440,12 @@ config MSM_MULTIMEDIA_USE_ION
 	  instead of pmem. Selecting this may also involve userspace
 	  dependencies as well.
 
+config MSM_8X60_FUSION_GPIO_GLITCH
+	tristate "Mask unexpected glitch during boot up"
+	help
+	  Enable masking of glitch during boot up, which helps in avoiding unwanted
+	  noise or s/w code from toggling the ap2mdm err fatal.
+
 config MSM_RTB
 	bool "Register tracing"
 	help
@@ -2438,21 +2468,6 @@ config PM8921_MIC_BIAS
         help
           Provides support for activate pm8921 mic bias driver used for
           primary and secondary mic.
-
-choice
-    prompt "SWIQI"
-    optional
-    default n
-    config SEMC_SWIQI
-        bool "Enable SWIQI"
-        help
-          This enables SWIQI.
-
-    config SONY_SWIQI2
-        bool "Enable SWIQI2"
-        help
-          This enables SWIQI2.
-endchoice
 
 config SIMPLE_REMOTE_PLATFORM
         bool "Simple Remote platform specific driver"
@@ -2757,13 +2772,6 @@ config MSM_HSIC_SYSMON_TEST
 	  This will create a debugfs file entry named "hsic_sysmon_test" which
 	  can be read and written to send character data to the sysmon port of
 	  the modem over USB.
-
-config MSM_8X60_FUSION_GPIO_GLITCH
-	tristate "Mask unexpected glitch during boot up"
-	help
-	  Enable masking of glitch during boot up, which helps in avoiding unwanted
-	  noise or s/w code from toggling the ap2mdm err fatal.
-
 config SONY_SSM
         bool "Support Super Stamina Mode"
         default n
